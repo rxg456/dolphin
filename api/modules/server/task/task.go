@@ -53,7 +53,9 @@ func (tc *TaskCache) doSyncTask() {
 			if !loaded {
 				tasks = make([]*models.TaskMeta, 0)
 			}
-			t.Action = "start"
+			if t.Action == "" {
+				t.Action = "start"
+			}
 			tasks = append(tasks, t)
 			m[host] = tasks
 		}

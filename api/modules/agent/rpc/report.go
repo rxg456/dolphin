@@ -54,7 +54,6 @@ func (r *RpcCli) DoTaskReport(localIp string) {
 		count := len(resp.AssignTasks)
 		for i := 0; i < count; i++ {
 			at := resp.AssignTasks[i]
-
 			taskjob.Locals.AssignTask(at)
 		}
 	}
