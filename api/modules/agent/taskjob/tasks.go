@@ -83,6 +83,9 @@ func (lt *LocalTaskT) AssignTask(at *models.TaskMeta) {
 			// no process in local, no need kill
 			return
 		}
+		if at.Action == "" {
+			at.Action = "start"
+		}
 		local = &Task{
 			Id:      at.Id,
 			JobId:   at.Id,
