@@ -14,6 +14,7 @@ func configRoutes(r *gin.Engine) {
 		})
 		api.POST("/task", TaskAdd)
 		api.GET("/task", TaskGets)
+		api.POST("/kill-task", TaskKill)
 
 	}
 }

@@ -1,0 +1,9 @@
+mysql_s:
+  - name: dolphin
+    addr: "root:123123@tcp(127.0.0.1:3306)/dolphin?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
+    max: 128
+    idel: 16
+    debug: false
+
+rpc_addr: 0.0.0.0:8081
+http_addr: 0.0.0.0:8082
