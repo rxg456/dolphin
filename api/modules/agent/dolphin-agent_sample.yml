@@ -1,0 +1,5 @@
+rpc_server_addr: 0.0.0.0:8081
+http_addr: 0.0.0.0:8087
+job:
+  metadir: ./meta
+  interval: 2

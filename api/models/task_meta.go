@@ -20,9 +20,9 @@ type TaskMeta struct {
 	Created  time.Time `xorm:"created" json:"created"` //创建时间
 	HostsRaw string    `json:"hosts"`                  // 执行机器的ip列表json
 	Hosts    []string  `xorm:"-" json:"-"`
-	Done     int       `xorm:"done" json:"done"` //任务结束与否的标志位=0未结束，=1结束
-	Clock    int64     `xorm:"-" json:"clock"`   // 完成时间
-	Action   string    `xorm:"-" json:"action"`  // 动作
+	Done     int       `xorm:"done" json:"done"`     //任务结束与否的标志位=0未结束，=1结束
+	Clock    int64     `xorm:"-" json:"clock"`       // 完成时间
+	Action   string    `xorm:"action" json:"action"` // 动作
 }
 
 // 查询一条

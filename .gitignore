@@ -36,3 +36,4 @@ _test
 docker_mon
 dolphin-server.yml
 dolphin-agent.yml
+meta

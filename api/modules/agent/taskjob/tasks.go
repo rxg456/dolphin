@@ -1,9 +1,10 @@
 package taskjob
 
 import (
+	"github.com/toolkits/pkg/logger"
+
 	"github.com/rxg456/dolphin/api/models"
 	serverRpc "github.com/rxg456/dolphin/api/modules/server/rpc"
-	"github.com/toolkits/pkg/logger"
 )
 
 var Locals *LocalTaskT
@@ -126,7 +127,7 @@ func (lt *LocalTaskT) Clean(assigned map[int64]struct{}) {
 		// 可能是远端认为超时了，此时本地不能删除，仍然要继续上报
 		if lt.M[id].GetStatus() == "running" {
 			continue
-		}		
+		}
 
 		lt.M[id].ResetBuff()
 		cmd := lt.M[id].Cmd
