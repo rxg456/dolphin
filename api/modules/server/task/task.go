@@ -26,7 +26,7 @@ func TaskCacheInit() {
 	}
 }
 
-// doSyncTask从db中查询出所有为完成的任务，对应就是done=0的task
+// doSyncTask从db中查询出所有未完成的任务，对应就是done=0的task
 // 然后遍历 task ， 按照机器ip塞入map中
 func (tc *TaskCache) doSyncTask() {
 	// 获取为完成的任务
@@ -53,7 +53,6 @@ func (tc *TaskCache) doSyncTask() {
 			if !loaded {
 				tasks = make([]*models.TaskMeta, 0)
 			}
-			t.Action = "start"
 			tasks = append(tasks, t)
 			m[host] = tasks
 		}
