@@ -72,6 +72,10 @@ func (lt *LocalTaskT) SetTask(t *Task) {
 // 然后启动新的任务，将task塞入map中管理
 func (lt *LocalTaskT) AssignTask(at *models.TaskMeta) {
 	local, found := lt.GetTask(at.Id)
+	// 第一次创建任务为空，赋值启动
+	if at.Action == "" {
+		at.Action = "start"
+	}
 	if found {
 		if local.Clock == at.Clock && local.Action == at.Action {
 			return
@@ -82,9 +86,6 @@ func (lt *LocalTaskT) AssignTask(at *models.TaskMeta) {
 		if at.Action == "kill" {
 			// no process in local, no need kill
 			return
-		}
-		if at.Action == "" {
-			at.Action = "start"
 		}
 		local = &Task{
 			Id:      at.Id,
