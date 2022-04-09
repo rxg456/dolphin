@@ -3,3 +3,19 @@ http_addr: 0.0.0.0:8087
 job:
   metadir: ./meta
   interval: 2
+
+# 开启logjob的
+enable_log_job: true 
+log_strategies:
+  - metric_name: log_containerd_total
+    metric_help: /var/log/messages 中的 containerd日志 total
+    file_path: /var/log/messages
+    pattern:  ".*containerd.*"
+    func: cnt
+    tags:
+      level: ".*level=(.*?) .*"
+  - metric_name: ngx_acc_code
+    metric_help: nginx code avg
+    file_path: /var/log/nginx/access.log
+    pattern:  '.*\[code=(.*?)\].*'
+    func: avg

@@ -3,6 +3,7 @@ package common
 import (
 	"log"
 	"net"
+	"os"
 	"strings"
 )
 
@@ -15,4 +16,9 @@ func GetLocalIp() string {
 	}
 	localIp := strings.Split(conn.LocalAddr().String(), ":")[0]
 	return localIp
+}
+
+func GetHostName() string {
+	name, _ := os.Hostname()
+	return name
 }

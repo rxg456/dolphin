@@ -12,12 +12,18 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/promlog"
 	promlogflag "github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/rxg456/dolphin/api/common"
 	"github.com/rxg456/dolphin/api/modules/agent/config"
+	"github.com/rxg456/dolphin/api/modules/agent/consumer"
+	"github.com/rxg456/dolphin/api/modules/agent/counter"
+	"github.com/rxg456/dolphin/api/modules/agent/logjob"
+	"github.com/rxg456/dolphin/api/modules/agent/metrics"
 	"github.com/rxg456/dolphin/api/modules/agent/rpc"
 	"github.com/rxg456/dolphin/api/modules/agent/taskjob"
 )
@@ -85,6 +91,30 @@ func main() {
 	// 初始化任务缓存
 	taskjob.InitLocals(sConfig.Job.MetaDir)
 
+	// 这里开始 logJob
+	// 创建metrics
+	metricsMap := metrics.CreateMetrics(sConfig.LogStrategies)
+	// 注册metrics
+	for _, m := range metricsMap {
+		prometheus.MustRegister(m)
+	}
+	// 统计指标的同步queue
+	cq := make(chan *consumer.AnalysPoint, common.CounterQueueSize)
+	// 统计指标的管理器
+	pm := counter.NewPointCounterManager(cq, metricsMap)
+	// 日志job管理器
+	logJobManager := logjob.NewLogJobManager(cq)
+	// 把配置文件中的logjob传入
+	logJobsyncChan := make(chan []*logjob.LogJob, 1)
+	localConfigJobs := make([]*logjob.LogJob, 0)
+	for _, i := range sConfig.LogStrategies {
+		i := i
+		j := &logjob.LogJob{Stra: i}
+		localConfigJobs = append(localConfigJobs, j)
+
+	}
+	logJobsyncChan <- localConfigJobs
+
 	// 编排开始
 	var g run.Group
 	ctxAll, cancelAll := context.WithCancel(context.Background())
@@ -125,6 +155,95 @@ func main() {
 		}, func(err error) {
 			cancelAll()
 		})
+	}
+
+	if sConfig.EnableLogJob {
+		{
+
+			// logJobManager 增量同步策略，任务的函数
+			g.Add(func() error {
+				err := logJobManager.SyncManager(ctxAll, logJobsyncChan)
+				if err != nil {
+					level.Error(logger).Log("msg", "TickerInfoCollectAndReport.error", "err", err)
+					return err
+				}
+				return err
+
+			}, func(err error) {
+				cancelAll()
+			},
+			)
+		}
+
+		{
+			// 统计计数的实体的管理器，接收ap 处理
+			g.Add(func() error {
+				err := pm.UpdateManager(ctxAll)
+				if err != nil {
+					level.Error(logger).Log("msg", "PointCounterManager.UpdateManager.error", "err", err)
+					return err
+				}
+				return err
+
+			}, func(err error) {
+				cancelAll()
+			},
+			)
+		}
+		{
+			// 统计任务实体转换为prometheus的metrics的任务
+			g.Add(func() error {
+				err := pm.SetMetricsManager(ctxAll)
+				if err != nil {
+					level.Error(logger).Log("msg", "PointCounterManager.SetMetricsManager.error", "err", err)
+					return err
+				}
+				return err
+
+			}, func(err error) {
+				cancelAll()
+			},
+			)
+		}
+
+		{
+			// logjob 结果的metrics http server
+			g.Add(func() error {
+				errChan := make(chan error, 1)
+				go func() {
+					errChan <- metrics.StartMetricWeb(sConfig.HttpAddr)
+				}()
+				select {
+				case err := <-errChan:
+					level.Error(logger).Log("msg", "logjob.metrics.web.server.error", "err", err)
+					return err
+				case <-ctxAll.Done():
+					level.Info(logger).Log("msg", "receive_quit_signal_web_server_exit")
+					return nil
+				}
+
+			}, func(err error) {
+				cancelAll()
+			},
+			)
+		}
+
+		{
+			// logJob和server直接同步的
+			g.Add(func() error {
+				err := logjob.TickerLogJobSync(rpcCli, ctxAll, logJobsyncChan, localConfigJobs, metricsMap, common.GetHostName())
+				if err != nil {
+					level.Error(logger).Log("msg", "PointCounterManager.SetMetricsManager.error", "err", err)
+					return err
+				}
+				return err
+
+			}, func(err error) {
+				cancelAll()
+			},
+			)
+		}
+
 	}
 
 	g.Run()
