@@ -47,8 +47,7 @@ func main() {
 	// 强制解析
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	// 设置logger
-	var logger log.Logger
-	logger = func(config *promlog.Config) log.Logger {
+	logger := func(config *promlog.Config) log.Logger {
 		var (
 			l  log.Logger
 			le level.Option

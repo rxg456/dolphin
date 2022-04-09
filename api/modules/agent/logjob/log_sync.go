@@ -13,6 +13,7 @@ import (
 	"github.com/rxg456/dolphin/api/modules/agent/rpc"
 )
 
+// logJob从server定时同步 
 func TickerLogJobSync(cli *rpc.RpcCli, ctx context.Context, logJobsyncChan chan []*LogJob, localConfigJobs []*LogJob, metricsMap map[string]*prometheus.GaugeVec, hostName string) error {
 	ticker := time.NewTicker(5 * time.Second)
 	doLogJobSync(cli, logJobsyncChan, localConfigJobs, metricsMap, hostName)
@@ -29,11 +30,11 @@ func TickerLogJobSync(cli *rpc.RpcCli, ctx context.Context, logJobsyncChan chan 
 
 }
 
+// logJob从server直接同步
 func doLogJobSync(cli *rpc.RpcCli, logJobsyncChan chan []*LogJob, localConfigJobs []*LogJob, metricsMap map[string]*prometheus.GaugeVec, hostName string) {
 
 	res := cli.LogJobSync(hostName)
 	ls := []*models.LogStrategy{}
-	//
 
 	for _, i := range res {
 		i := i

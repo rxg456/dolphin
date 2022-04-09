@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-var (
-	dbName string = "dolphin"
-)
+
 
 type TaskMeta struct {
 	Id       int64     `json:"id"`

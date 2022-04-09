@@ -20,3 +20,23 @@ type LogStrategy struct {
 	TagRegs    map[string]*regexp.Regexp `json:"-" yaml:"-" xorm:"-"`    // 标签的正则 ，这是最终的
 
 }
+
+func (lm *LogStrategy) TableName() string {
+	return "log_job"
+}
+
+func LogJobGets(where string, args ...interface{}) ([]*LogStrategy, error) {
+	var obj []*LogStrategy
+	err := DB[dbName].Table("log_job").Where(where, args...).Find(&obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+// 插入一条记录
+func (lm *LogStrategy) AddOne() (int64, error) {
+	_, err := DB[dbName].InsertOne(lm)
+	return lm.Id, err
+}
